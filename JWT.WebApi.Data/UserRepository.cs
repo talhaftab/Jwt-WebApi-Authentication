@@ -15,17 +15,27 @@ namespace JWT.WebApi.Data
         {
             this._context = context;
         }
-        public async Task<User?> RegisterUserAsync(User user)
+        public async Task<ApiResponse<User?>> RegisterUserAsync(User user)
         {
+            var apiResponse = new ApiResponse<User?>();
             var isExist = (from x in this._context.Users
                            where x.EmailAddress == user.EmailAddress
                            select x).FirstOrDefault();
-            if (isExist is null)
+            if (isExist is not null)
+            {
+                apiResponse.Content = isExist;
+                apiResponse.Message = "User is already exisit.";
+                apiResponse.Status = System.Net.HttpStatusCode.BadRequest;
+            }
+            else
             {
                 _ = await this._context.AddAsync(user);
+                var result = await this._context.SaveChangesAsync();
+                apiResponse.Content = user;
+                apiResponse.Message = "New user has been registerd.";
+                apiResponse.Status = System.Net.HttpStatusCode.OK;
             }
-            var result = await this._context.SaveChangesAsync();
-            return result > 0 ? user : null;
+            return apiResponse;
         }
     }
 }

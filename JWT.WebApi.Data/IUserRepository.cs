@@ -9,6 +9,6 @@ namespace JWT.WebApi.Data
 {
     public interface IUserRepository
     {
-        Task<User?> RegisterUserAsync(User user);
+        Task<ApiResponse<User?>> RegisterUserAsync(User user);
     }
 }

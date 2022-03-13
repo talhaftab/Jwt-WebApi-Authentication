@@ -20,19 +20,21 @@ namespace JWT.WebApi.Web.Controllers
         }
 
         [HttpPost, Route("register")]
-        public async Task<ActionResult<User>?> RegisterAsync(UserDto request)
+        public async Task<ApiResponse<User>> RegisterAsync(UserDto request)
         {
             if (request == null)
-                return null;
+                return new ApiResponse<User>()
+                {
+                    Content = null,
+                    Message = "Information is empty"
+                };
             var user = new User()
             {
                 UserName = request.UserName,
                 EmailAddress = request.EmailAddress
             };
             var response = await userManager.RegisterUserAsync(user, request.Password);
-            //var userRes = await authManager.CreatePasswordHashAsync(request.Password);
-            //userRes.UserName = request.UserName;
-            return Ok(response);
+            return response;
         }
 
         //[HttpPost, Route("login")]

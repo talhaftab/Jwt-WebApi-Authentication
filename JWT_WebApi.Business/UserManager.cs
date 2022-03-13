@@ -18,7 +18,7 @@ namespace JWT.WebApi.Business
             _userRepository = userRepository;
             _authManager = authManager;
         }
-        public async Task<User?> RegisterUserAsync(User user, string password)
+        public async Task<ApiResponse<User?>> RegisterUserAsync(User user, string password)
         {
             var userHash = await _authManager.CreatePasswordHashAsync(password);
             user.PasswordHash = userHash.PasswordHash;
