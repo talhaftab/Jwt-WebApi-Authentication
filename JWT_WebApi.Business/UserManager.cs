@@ -27,9 +27,10 @@ namespace JWT.WebApi.Business
             return result;
         }
 
-        public Task<User> LoginUserAsync(User user)
+        public async Task<User> CheckUserAsync(User user)
         {
-            throw new NotImplementedException();
+            var result = await _userRepository.CheckUserExistAsync(user);
+            return result;
         }
     }
 }

@@ -10,6 +10,6 @@ namespace JWT.WebApi.Business
     public interface IUserManager
     {
         Task<ApiResponse<User?>> RegisterUserAsync(User user, string password);
-        Task<User> LoginUserAsync(User user);
+        Task<User> CheckUserAsync(User user);
     }
 }

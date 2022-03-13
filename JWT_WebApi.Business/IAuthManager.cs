@@ -6,5 +6,6 @@ namespace JWT.WebApi.Business
     {
         Task<User?> CreatePasswordHashAsync(string password);
         Task<bool> VerifyPasswordAsync(User user, string password);
+        string GenerateTokenAsync(User user);
     }
 }

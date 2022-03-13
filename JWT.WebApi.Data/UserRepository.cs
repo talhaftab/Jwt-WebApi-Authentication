@@ -1,5 +1,6 @@
 ﻿using JWT.WebApi.Data.Context;
 using JWT.WebApi.Model;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,24 +19,32 @@ namespace JWT.WebApi.Data
         public async Task<ApiResponse<User?>> RegisterUserAsync(User user)
         {
             var apiResponse = new ApiResponse<User?>();
-            var isExist = (from x in this._context.Users
-                           where x.EmailAddress == user.EmailAddress
-                           select x).FirstOrDefault();
-            if (isExist is not null)
+            try
             {
-                apiResponse.Content = isExist;
-                apiResponse.Message = "User is already exisit.";
+                _ = await _context.AddAsync(user);
+                var result = await this._context.SaveChangesAsync();
+                if (result > 0)
+                {
+                    apiResponse.Content = user;
+                    apiResponse.Message = "New user has been registerd.";
+                    apiResponse.Status = System.Net.HttpStatusCode.OK;
+                }
+            }
+            catch (Exception ex)
+            {
+                apiResponse.Message = ex.Message;
                 apiResponse.Status = System.Net.HttpStatusCode.BadRequest;
             }
-            else
-            {
-                _ = await this._context.AddAsync(user);
-                var result = await this._context.SaveChangesAsync();
-                apiResponse.Content = user;
-                apiResponse.Message = "New user has been registerd.";
-                apiResponse.Status = System.Net.HttpStatusCode.OK;
-            }
             return apiResponse;
+        }
+
+        public async Task<User?> CheckUserExistAsync(User user)
+        {
+            var query = (from x in this._context.Users
+                         where x.EmailAddress == user.EmailAddress
+                         select x);
+            var result = await query.FirstOrDefaultAsync();
+            return result;
         }
     }
 }
