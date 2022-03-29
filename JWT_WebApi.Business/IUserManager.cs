@@ -12,5 +12,8 @@ namespace JWT.WebApi.Business
         Task<ApiResponse<User?>> RegisterUserAsync(User user, string password);
         Task<User> CheckUserAsync(User user);
         Task<List<User>> GetAllUserAsync();
+        string GetClaimName();
+
+
     }
 }

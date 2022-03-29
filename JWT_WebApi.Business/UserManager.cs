@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+
+using System.Security.Claims;
 
 namespace JWT.WebApi.Business
 {
@@ -13,10 +16,14 @@ namespace JWT.WebApi.Business
     {
         private readonly IUserRepository _userRepository;
         private readonly IAuthManager _authManager;
-        public UserManager(IUserRepository userRepository, IAuthManager authManager)
+        private readonly IHttpContextAccessor httpContextAccessor;
+
+        public UserManager(IUserRepository userRepository, IAuthManager authManager,
+            IHttpContextAccessor httpContextAccessor)
         {
             _userRepository = userRepository;
             _authManager = authManager;
+            this.httpContextAccessor = httpContextAccessor;
         }
         public async Task<ApiResponse<User?>> RegisterUserAsync(User user, string password)
         {
@@ -27,15 +34,25 @@ namespace JWT.WebApi.Business
             return result;
         }
 
-        public async Task<User> CheckUserAsync(User user)
+        public async Task<User?> CheckUserAsync(User user)
         {
             var result = await _userRepository.CheckUserExistAsync(user);
             return result;
         }
 
-        public async Task<List<User>> GetAllUserAsync()
+        public async Task<List<User?>> GetAllUserAsync()
         {
             var result = await this._userRepository.GetAllUserAsync();
+            return result;
+        }
+
+        public string? GetClaimName()
+        {
+            var result = string.Empty;
+            if (this.httpContextAccessor.HttpContext != null)
+            {
+                result = httpContextAccessor.HttpContext.User?.FindFirst(ClaimTypes.Name)?.Value.ToString();
+            }
             return result;
         }
     }

@@ -96,5 +96,12 @@ namespace JWT.WebApi.Web.Controllers
             return Ok(result);
         }
 
+        [HttpGet, Route("ClaimName"), Authorize]
+        public IActionResult GetClaimName()
+        {
+            var result = this.userManager.GetClaimName();
+            return Ok(result);
+        }
+
     }
 }
