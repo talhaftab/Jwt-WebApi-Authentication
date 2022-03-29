@@ -46,5 +46,13 @@ namespace JWT.WebApi.Data
             var result = await query.FirstOrDefaultAsync();
             return result;
         }
+
+        public async Task<List<User>> GetAllUserAsync()
+        {
+            var query = (from x in this._context.Users
+                         select x);
+            var result = await query.ToListAsync();
+            return result;
+        }
     }
 }

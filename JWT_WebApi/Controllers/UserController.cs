@@ -1,5 +1,6 @@
 ﻿using JWT.WebApi.Business;
 using JWT.WebApi.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -75,7 +76,7 @@ namespace JWT.WebApi.Web.Controllers
                     apiResponse.Status = System.Net.HttpStatusCode.BadRequest;
                     return apiResponse;
                 }
-                var token = authManager.GenerateTokenAsync(user);
+                var token = authManager.GenerateTokenAsync(hasUser);
                 apiResponse.Content = token;
                 apiResponse.Message = "User can login with token";
                 apiResponse.Status = System.Net.HttpStatusCode.OK;
@@ -86,6 +87,13 @@ namespace JWT.WebApi.Web.Controllers
                 apiResponse.Status = System.Net.HttpStatusCode.BadRequest;
             }
             return apiResponse;
+        }
+
+        [HttpGet, Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var result = await this.userManager.GetAllUserAsync();
+            return Ok(result);
         }
 
     }

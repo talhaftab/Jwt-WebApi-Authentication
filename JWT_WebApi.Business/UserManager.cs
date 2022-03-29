@@ -32,5 +32,11 @@ namespace JWT.WebApi.Business
             var result = await _userRepository.CheckUserExistAsync(user);
             return result;
         }
+
+        public async Task<List<User>> GetAllUserAsync()
+        {
+            var result = await this._userRepository.GetAllUserAsync();
+            return result;
+        }
     }
 }

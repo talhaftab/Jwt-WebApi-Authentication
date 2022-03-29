@@ -11,5 +11,7 @@ namespace JWT.WebApi.Data
     {
         Task<ApiResponse<User?>> RegisterUserAsync(User user);
         Task<User?> CheckUserExistAsync(User user);
+        Task<List<User?>> GetAllUserAsync();
+
     }
 }
