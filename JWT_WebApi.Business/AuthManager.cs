@@ -1,4 +1,5 @@
 ﻿using JWT.WebApi.Model;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -15,9 +16,12 @@ namespace JWT.WebApi.Business
     public class AuthManager : IAuthManager
     {
         private readonly IConfiguration _configuration;
-        public AuthManager(IConfiguration configuration)
+        private readonly IHttpContextAccessor httpContextAccessor;
+
+        public AuthManager(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _configuration = configuration;
+            this.httpContextAccessor = httpContextAccessor;
         }
         public async Task<User?> CreatePasswordHashAsync(string password)
         {
@@ -53,6 +57,25 @@ namespace JWT.WebApi.Business
                 var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
                 return computedHash.SequenceEqual(user.PasswordHash);
             }
+        }
+        public string? GetClaimName()
+        {
+            var result = string.Empty;
+            if (this.httpContextAccessor.HttpContext != null)
+            {
+                result = httpContextAccessor.HttpContext.User?.FindFirst(ClaimTypes.Name)?.Value.ToString();
+            }
+            return result;
+        }
+        public async Task<string?> GenerateRefreshToken()
+        {
+            var secureRandomBytes = new byte[32];
+
+            using var randomNumberGenerator = RandomNumberGenerator.Create();
+            await System.Threading.Tasks.Task.Run(() => randomNumberGenerator.GetBytes(secureRandomBytes));
+
+            var refreshToken = Convert.ToBase64String(secureRandomBytes);
+            return refreshToken;
         }
     }
 }
