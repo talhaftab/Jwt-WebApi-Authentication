@@ -5,6 +5,7 @@ using JWT.WebApi.Model.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace JWT.WebApi.Web.Controllers
 {
@@ -65,8 +66,12 @@ namespace JWT.WebApi.Web.Controllers
                     apiResponse.Status = System.Net.HttpStatusCode.BadRequest;
                     return apiResponse;
                 }
-                var token = authManager.GenerateTokenAsync(user);
-                apiResponse.Content = new AuthResponse() { Token = token };
+                var authResponse = await authManager.GenerateTokenAsync(user, HttpContext.Connection.RemoteIpAddress.ToString());
+                apiResponse.Content = new AuthResponse()
+                {
+                    Token = authResponse.Token,
+                    RefreshToken = authResponse.RefreshToken
+                };
                 apiResponse.Message = "Token";
                 apiResponse.Status = System.Net.HttpStatusCode.OK;
             }
@@ -76,6 +81,32 @@ namespace JWT.WebApi.Web.Controllers
                 apiResponse.Status = System.Net.HttpStatusCode.BadRequest;
             }
             return apiResponse;
+        }
+
+        //[HttpPost, Route("refresh-token")]
+        //public async Task<ApiResponse<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest request)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return new ApiResponse<AuthResponse>
+        //        {
+        //            Message = "Token must be provided",
+        //            Status = System.Net.HttpStatusCode.BadRequest
+        //        };
+        //    string ipAddress = HttpContext.Connection.RemoteIpAddress.ToString();
+        //    var token = GetJwtToken(request.ExpiredToken);
+        //    var userRefreshToken = await this.userManager.GetFirstOrDefaultRefreshTokenAsync(request, ipAddress);
+        //    //var validateResponse = ValidateDetails(token, userRefreshToken);
+        //}
+
+        //private object ValidateDetails(JwtSecurityToken token, UserRefreshToken userRefreshToken)
+        //{
+
+        //}
+
+        private JwtSecurityToken GetJwtToken(string expiredToken)
+        {
+            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
+            return tokenHandler.ReadJwtToken(expiredToken);
         }
 
         [HttpGet, Authorize]

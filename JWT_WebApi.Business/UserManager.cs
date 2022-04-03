@@ -48,5 +48,10 @@ namespace JWT.WebApi.Business
             var result = await this._userRepository.GetAllUserAsync();
             return result;
         }
+        public async Task<UserRefreshToken> GetFirstOrDefaultRefreshTokenAsync(RefreshTokenRequest request, string ipAddress)
+        {
+            var userRefreshToken = await this._userRepository.GetFirstOrDefaultRefreshTokenAsync(request, ipAddress);
+            return userRefreshToken;
+        }
     }
 }

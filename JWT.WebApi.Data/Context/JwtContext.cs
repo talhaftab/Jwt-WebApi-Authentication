@@ -15,6 +15,8 @@ namespace JWT.WebApi.Data.Context
 
         }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -24,6 +26,7 @@ namespace JWT.WebApi.Data.Context
                 entity.Property(e => e.EmailAddress).HasMaxLength(128);
                 entity.Property(e => e.PasswordHash);
                 entity.Property(e => e.PasswordSalt);
+                entity.HasMany(x => x.UserRefreshTokens);
             });
         }
     }

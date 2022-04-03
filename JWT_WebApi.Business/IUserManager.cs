@@ -13,6 +13,6 @@ namespace JWT.WebApi.Business
         Task<ApiResponse<User?>> RegisterUserAsync(AuthRequest request);
         Task<User> CheckUserAsync(string emailAddress);
         Task<List<User>> GetAllUserAsync();
-
+        Task<UserRefreshToken> GetFirstOrDefaultRefreshTokenAsync(RefreshTokenRequest request, string ipAddress);
     }
 }

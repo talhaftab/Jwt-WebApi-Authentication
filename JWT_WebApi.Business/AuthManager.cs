@@ -1,4 +1,6 @@
-﻿using JWT.WebApi.Model;
+﻿using JWT.WebApi.Data;
+using JWT.WebApi.Model;
+using JWT.WebApi.Model.Response;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -17,11 +19,15 @@ namespace JWT.WebApi.Business
     {
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly IUserRepository userRepository;
 
-        public AuthManager(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+
+        public AuthManager(IConfiguration configuration, IHttpContextAccessor httpContextAccessor,
+            IUserRepository userRepository)
         {
             _configuration = configuration;
             this.httpContextAccessor = httpContextAccessor;
+            this.userRepository = userRepository;
         }
         public async Task<User?> CreatePasswordHashAsync(string password)
         {
@@ -33,7 +39,7 @@ namespace JWT.WebApi.Business
             }
             return user;
         }
-        public string GenerateTokenAsync(User user)
+        public async Task<AuthResponse> GenerateTokenAsync(User user, string ipAddress)
         {
             List<Claim> claims = new List<Claim>()
             {
@@ -45,11 +51,43 @@ namespace JWT.WebApi.Business
             var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddDays(1),
+                expires: DateTime.Now.AddMinutes(1),
                 signingCredentials: cred);
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-            return jwt;
+            var refreshToken = await GenerateRefreshToken();
+            var result = await SaveTokenDetailAsync(ipAddress, refreshToken, jwt, user.Id);
+            if (result.Content == null)
+            {
+                return await Task.FromResult<AuthResponse>(new AuthResponse()
+                {
+                    Token = jwt,
+                    RefreshToken = refreshToken,
+                    Message = "Not added into database, it could be problem."
+                });
+            }
+            return await Task.FromResult<AuthResponse>(new AuthResponse()
+            {
+                Token = jwt,
+                RefreshToken = refreshToken,
+            });
         }
+
+        private async Task<ApiResponse<UserRefreshToken?>> SaveTokenDetailAsync(string ipAddress, string refreshToken, string token, Guid userId)
+        {
+            var userRefreshToken = new UserRefreshToken()
+            {
+                CreatedDate = DateTime.UtcNow,
+                ExpirationDate = DateTime.UtcNow.AddMinutes(1),
+                IpAddress = ipAddress,
+                IsInvalidated = false,
+                RefreshToken = refreshToken,
+                Token = token,
+                UserId = userId,
+            };
+            var result = await this.userRepository.SaveUserRefreshTokenAsync(userRefreshToken);
+            return result;
+        }
+
         public async Task<bool> VerifyPasswordAsync(User user, string password)
         {
             using (var hmac = new HMACSHA512(user.PasswordSalt))
@@ -69,7 +107,7 @@ namespace JWT.WebApi.Business
         }
         public async Task<string?> GenerateRefreshToken()
         {
-            var secureRandomBytes = new byte[32];
+            var secureRandomBytes = new byte[64];
 
             using var randomNumberGenerator = RandomNumberGenerator.Create();
             await System.Threading.Tasks.Task.Run(() => randomNumberGenerator.GetBytes(secureRandomBytes));

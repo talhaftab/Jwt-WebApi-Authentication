@@ -1,4 +1,5 @@
 ﻿using JWT.WebApi.Model;
+using JWT.WebApi.Model.Response;
 
 namespace JWT.WebApi.Business
 {
@@ -6,7 +7,7 @@ namespace JWT.WebApi.Business
     {
         Task<User?> CreatePasswordHashAsync(string password);
         Task<bool> VerifyPasswordAsync(User user, string password);
-        string GenerateTokenAsync(User user);
+        Task<AuthResponse> GenerateTokenAsync(User user, string ipAddress);
         string GetClaimName();
         Task<string?> GenerateRefreshToken();
     }
