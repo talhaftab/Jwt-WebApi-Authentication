@@ -21,7 +21,6 @@ namespace JWT.WebApi.Data.Context
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();
-                entity.Property(e => e.UserName).HasMaxLength(128);
                 entity.Property(e => e.EmailAddress).HasMaxLength(128);
                 entity.Property(e => e.PasswordHash);
                 entity.Property(e => e.PasswordSalt);

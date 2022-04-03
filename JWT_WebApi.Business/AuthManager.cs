@@ -37,7 +37,7 @@ namespace JWT.WebApi.Business
         {
             List<Claim> claims = new List<Claim>()
             {
-                new Claim(ClaimTypes.Name,user.UserName),
+                new Claim(ClaimTypes.Email,user.EmailAddress),
                 new Claim(ClaimTypes.Role,"Admin"),
             };
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.

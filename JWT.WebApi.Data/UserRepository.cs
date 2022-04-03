@@ -29,19 +29,26 @@ namespace JWT.WebApi.Data
                     apiResponse.Message = "New user has been registerd.";
                     apiResponse.Status = System.Net.HttpStatusCode.OK;
                 }
+                else
+                {
+                    apiResponse.Content = null;
+                    apiResponse.Message = "Not registerd.";
+                    apiResponse.Status = System.Net.HttpStatusCode.ExpectationFailed;
+                }
             }
             catch (Exception ex)
             {
+                apiResponse.Content = null;
                 apiResponse.Message = ex.Message;
                 apiResponse.Status = System.Net.HttpStatusCode.BadRequest;
             }
             return apiResponse;
         }
 
-        public async Task<User?> CheckUserExistAsync(User user)
+        public async Task<User?> CheckUserExistAsync(string emailAddress)
         {
             var query = (from x in this._context.Users
-                         where x.EmailAddress == user.EmailAddress
+                         where x.EmailAddress == emailAddress
                          select x);
             var result = await query.FirstOrDefaultAsync();
             return result;

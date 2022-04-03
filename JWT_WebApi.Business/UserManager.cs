@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 using System.Security.Claims;
+using JWT.WebApi.Model.Request;
 
 namespace JWT.WebApi.Business
 {
@@ -23,18 +24,22 @@ namespace JWT.WebApi.Business
             _authManager = authManager;
         }
 
-        public async Task<ApiResponse<User?>> RegisterUserAsync(User user, string password)
+        public async Task<ApiResponse<User?>> RegisterUserAsync(AuthRequest request)
         {
-            var userHash = await _authManager.CreatePasswordHashAsync(password);
-            user.PasswordHash = userHash.PasswordHash;
-            user.PasswordSalt = userHash.PasswordSalt;
+            var userHash = await _authManager.CreatePasswordHashAsync(request.Password);
+            var user = new User()
+            {
+                EmailAddress = request.EmailAddress,
+                PasswordHash = userHash?.PasswordHash,
+                PasswordSalt = userHash?.PasswordSalt,
+            };
             var result = await this._userRepository.RegisterUserAsync(user);
             return result;
         }
 
-        public async Task<User?> CheckUserAsync(User user)
+        public async Task<User?> CheckUserAsync(string emailAddress)
         {
-            var result = await _userRepository.CheckUserExistAsync(user);
+            var result = await _userRepository.CheckUserExistAsync(emailAddress);
             return result;
         }
 

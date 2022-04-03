@@ -1,5 +1,7 @@
 ﻿using JWT.WebApi.Business;
 using JWT.WebApi.Model;
+using JWT.WebApi.Model.Request;
+using JWT.WebApi.Model.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,65 +20,54 @@ namespace JWT.WebApi.Web.Controllers
             this.authManager = authManager;
             this.userManager = userManager;
         }
+
         [HttpPost, Route("register")]
-        public async Task<ApiResponse<User>?> RegisterAsync(UserDto request)
+        public async Task<ApiResponse<User>?> RegisterAsync(AuthRequest request)
         {
             var apiResponse = new ApiResponse<User>();
             if (request == null)
                 return new ApiResponse<User>()
                 {
                     Content = null,
-                    Message = "Information is empty"
+                    Message = "Information is empty",
+                    Status = System.Net.HttpStatusCode.NotFound
                 };
-            var user = new User()
+            var user = await userManager.CheckUserAsync(request.EmailAddress);
+            if (user is null)
             {
-                UserName = request.UserName,
-                EmailAddress = request.EmailAddress
-            };
-            var hasUser = await userManager.CheckUserAsync(user);
-            if (hasUser is null)
-            {
-                var response = await userManager.RegisterUserAsync(user, request.Password);
+                var response = await userManager.RegisterUserAsync(request);
                 return response;
             }
-            else
-            {
-                apiResponse.Content = null;
-                apiResponse.Message = "User already exist";
-                apiResponse.Status = System.Net.HttpStatusCode.OK;
-            }
+            apiResponse.Message = "User already exist";
+            apiResponse.Status = System.Net.HttpStatusCode.OK;
             return apiResponse;
         }
 
         [HttpPost, Route("login")]
-        public async Task<ApiResponse<string>> LoginAsync(UserDto request)
+        public async Task<ApiResponse<AuthResponse>> LoginAsync(AuthRequest request)
         {
-            var apiResponse = new ApiResponse<string>();
+            var apiResponse = new ApiResponse<AuthResponse>();
             if (request == null)
-                return new ApiResponse<string>()
+                return new ApiResponse<AuthResponse>()
                 {
                     Content = null,
-                    Message = "Information is empty"
+                    Message = "Information is empty",
+                    Status = System.Net.HttpStatusCode.NotFound
                 };
-            var user = new User()
-            {
-                UserName = request.UserName,
-                EmailAddress = request.EmailAddress
-            };
 
-            var hasUser = await userManager.CheckUserAsync(user);
-            if (hasUser is not null)
+            var user = await userManager.CheckUserAsync(request.EmailAddress);
+            if (user is not null)
             {
-                var isVerified = await authManager.VerifyPasswordAsync(hasUser, request.Password);
+                var isVerified = await authManager.VerifyPasswordAsync(user, request.Password);
                 if (!isVerified)
                 {
                     apiResponse.Message = "Wrong password";
                     apiResponse.Status = System.Net.HttpStatusCode.BadRequest;
                     return apiResponse;
                 }
-                var token = authManager.GenerateTokenAsync(hasUser);
-                apiResponse.Content = token;
-                apiResponse.Message = "User can login with token";
+                var token = authManager.GenerateTokenAsync(user);
+                apiResponse.Content = new AuthResponse() { Token = token };
+                apiResponse.Message = "Token";
                 apiResponse.Status = System.Net.HttpStatusCode.OK;
             }
             else
@@ -90,7 +81,7 @@ namespace JWT.WebApi.Web.Controllers
         [HttpGet, Authorize]
         public IActionResult GetClaimName()
         {
-            var result = this.userManager.GetClaimName();
+            var result = this.authManager.GetClaimName();
             return Ok(result);
         }
     }
